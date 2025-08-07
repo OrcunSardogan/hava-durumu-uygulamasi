@@ -68,8 +68,10 @@
     <ul id="favorites"></ul>
   </div>
 
+  <script src="config.js"></script>
   <script>
-    const apiKey = "3bdd016e3585ce4deb8279b2f255f65f";
+    // config.js'den API_KEY değişkeni geliyor
+    const apiKey = API_KEY;
 
     function setBackground(condition) {
       const conditionLower = condition.toLowerCase();
@@ -146,7 +148,7 @@
           (position) => {
             getWeather(null, position.coords.latitude, position.coords.longitude);
           },
-          (error) => {
+          () => {
             alert("Konum alınamadı");
           }
         );
@@ -175,7 +177,7 @@
           `;
         });
         forecastEl.innerHTML = forecastHTML;
-      } catch (err) {
+      } catch {
         console.error("Tahmin verisi alınamadı");
       }
     }
