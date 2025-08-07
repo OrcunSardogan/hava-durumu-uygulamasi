@@ -20,13 +20,11 @@ Bu proje, HTML, CSS ve JavaScript kullanılarak geliştirilmiş bir **hava durum
 - OpenWeatherMap API
 - Unsplash API (arka plan görselleri)
 
-## 📸 Ekran Görüntüsü
 
-![Ekran Görüntüsü](screenshot.png) <!-- varsa ekran görüntüsü ekleyebilirsin -->
 
 ## 🔧 Kurulum
 
 1. Bu repoyu klonlayın:
    ```bash
-   git clone https://github.com/kullaniciadi/hava-durumu-uygulamasi.git
+   git clone https://github.com/OrcunSardogan/hava-durumu-uygulamasi.git
    cd hava-durumu-uygulamasi
