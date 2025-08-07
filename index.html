@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gelişmiş Hava Durumu Uygulaması</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      margin: 0;
+      padding: 20px;
+      color: white;
+      transition: background-image 0.5s ease;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 10px;
+    }
+    #forecast {
+      margin-top: 20px;
+      text-align: left;
+    }
+    #favorites {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+    #favorites li {
+      margin-bottom: 5px;
+    }
+    #favorites button {
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    @media screen and (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+      input, button {
+        width: 100%;
+        margin-top: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌦️ Hava Durumu</h1>
+    <input type="text" id="cityInput" placeholder="Şehir adı girin" />
+    <button onclick="getWeatherByCity()">Getir</button>
+    <button onclick="getLocationWeather()">📍 Konumumdan Getir</button>
+
+    <div id="weatherResult"></div>
+    <div id="forecast"></div>
+
+    <h3>⭐ Favori Şehirler</h3>
+    <ul id="favorites"></ul>
+  </div>
+
+  <script>
+    const apiKey = "3bdd016e3585ce4deb8279b2f255f65f";
+
+    function setBackground(condition) {
+      const conditionLower = condition.toLowerCase();
+      let imageUrl = "";
+
+      if (conditionLower.includes("clear")) {
+        imageUrl = "https://images.unsplash.com/photo-1502086223501-7ea6ecd79368?auto=format&fit=crop&w=1600&q=80";
+      } else if (conditionLower.includes("cloud")) {
+        imageUrl = "https://images.unsplash.com/photo-1499346030926-9a72daac6c63?auto=format&fit=crop&w=1600&q=80";
+      } else if (conditionLower.includes("rain") || conditionLower.includes("drizzle")) {
+        imageUrl = "https://images.unsplash.com/photo-1527766833261-b09c3163a791?auto=format&fit=crop&w=1600&q=80";
+      } else if (conditionLower.includes("snow")) {
+        imageUrl = "https://images.unsplash.com/photo-1608889179230-84b86b0b1b49?auto=format&fit=crop&w=1600&q=80";
+      } else if (conditionLower.includes("thunder")) {
+        imageUrl = "https://images.unsplash.com/photo-1500674425229-f692875b0ab7?auto=format&fit=crop&w=1600&q=80";
+      } else if (
+        conditionLower.includes("mist") ||
+        conditionLower.includes("haze") ||
+        conditionLower.includes("fog") ||
+        conditionLower.includes("smoke")
+      ) {
+        imageUrl = "https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?auto=format&fit=crop&w=1600&q=80";
+      } else {
+        imageUrl = "https://images.unsplash.com/photo-1508873699372-7ae9b0f8d4ef?auto=format&fit=crop&w=1600&q=80";
+      }
+
+      document.body.style.backgroundImage = `url('${imageUrl}')`;
+    }
+
+    function getWeatherByCity() {
+      const city = document.getElementById("cityInput").value.trim();
+      if (city === "") {
+        alert("Lütfen bir şehir adı girin.");
+        return;
+      }
+      getWeather(city);
+    }
+
+    async function getWeather(cityName = null, lat = null, lon = null) {
+      let url;
+      if (cityName) {
+        url = `https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}&lang=tr&units=metric`;
+      } else if (lat && lon) {
+        url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&lang=tr&units=metric`;
+      } else {
+        return;
+      }
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Şehir bulunamadı");
+        const data = await response.json();
+
+        setBackground(data.weather[0].main);
+
+        document.getElementById("weatherResult").innerHTML = `
+          <h2>${data.name}, ${data.sys.country}</h2>
+          <p>🌡️ Sıcaklık: ${data.main.temp} °C</p>
+          <p>☁️ Durum: ${data.weather[0].description}</p>
+          <p>💧 Nem: ${data.main.humidity}%</p>
+          <p>💨 Rüzgar: ${data.wind.speed} m/s</p>
+          <button onclick="addFavorite('${data.name}')">⭐ Favorilere Ekle</button>
+        `;
+
+        getForecast(data.coord.lat, data.coord.lon);
+      } catch (error) {
+        document.getElementById("weatherResult").innerText = error.message;
+      }
+    }
+
+    function getLocationWeather() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            getWeather(null, position.coords.latitude, position.coords.longitude);
+          },
+          (error) => {
+            alert("Konum alınamadı");
+          }
+        );
+      } else {
+        alert("Tarayıcınız konum desteği sağlamıyor");
+      }
+    }
+
+    async function getForecast(lat, lon) {
+      const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&lang=tr&units=metric`;
+      try {
+        const res = await fetch(forecastUrl);
+        const data = await res.json();
+        const forecastEl = document.getElementById("forecast");
+
+        const dailyForecast = data.list.filter(item => item.dt_txt.includes("12:00:00"));
+
+        let forecastHTML = "<h3>📆 5 Günlük Tahmin</h3>";
+        dailyForecast.forEach(item => {
+          const date = new Date(item.dt_txt).toLocaleDateString("tr-TR", { weekday: 'long', month: 'long', day: 'numeric' });
+          forecastHTML += `
+            <p>
+              <strong>${date}:</strong>
+              ${item.main.temp}°C, ${item.weather[0].description}
+            </p>
+          `;
+        });
+        forecastEl.innerHTML = forecastHTML;
+      } catch (err) {
+        console.error("Tahmin verisi alınamadı");
+      }
+    }
+
+    function addFavorite(city) {
+      let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+      if (!favorites.includes(city)) {
+        favorites.push(city);
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        loadFavorites();
+      }
+    }
+
+    function loadFavorites() {
+      const favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+      const list = document.getElementById("favorites");
+      list.innerHTML = "";
+
+      favorites.forEach((city) => {
+        const li = document.createElement("li");
+        li.textContent = city;
+
+        const getBtn = document.createElement("button");
+        getBtn.textContent = "🌤️";
+        getBtn.onclick = () => getWeather(city);
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "❌";
+        removeBtn.onclick = () => removeFavorite(city);
+
+        li.appendChild(getBtn);
+        li.appendChild(removeBtn);
+        list.appendChild(li);
+      });
+    }
+
+    function removeFavorite(city) {
+      let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+      favorites = favorites.filter(c => c !== city);
+      localStorage.setItem("favorites", JSON.stringify(favorites));
+      loadFavorites();
+    }
+
+    window.onload = () => {
+      loadFavorites();
+    };
+  </script>
+</body>
+</html>
